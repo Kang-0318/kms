@@ -1,47 +1,58 @@
+/* 리스트 컨테이너가 <ul>이면 기본 여백 제거 추천 */
+.TodoList { padding-left: 0; margin: 0; }
+
+/* 아이템을 4열 그리드: 체크박스 | 내용 | 날짜 | 버튼들 */
 .TodoItem {
-    display: flex;
-    gap: 20px;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-    /* justify-content: space-between; */
+  list-style: none;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: #fff;
 }
 
-.TodoItem.isCompleted {
-    background-color: #f1f1f1;
+.todo-checkbox {
+  width: 18px;
+  height: 18px;
 }
 
-.TodoItem .content {
-    flex: 1;
+.todo-content {
+  min-width: 0;            /* 🔑 줄바꿈/말줄임 위해 필요 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
 }
 
-.TodoItem .date {
-    font-size: 14px;
-    color: gray;
+.todo-date {
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .btn-wrap {
-    display: flex;
-    gap: 10px;
-}
-
-.TodoItem button {
-    cursor: pointer;
-    font-size: 14px;
-    border: none;
-    border-radius: 5px;
-    padding: 5px;
-    color: #fff
+  display: inline-flex;
+  gap: 6px;
 }
 
 .updateBtn {
-    background-color: rgb(80, 223, 180);
+  background: #4caf50;
+  color: #fff;
+  border: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .deleteBtn {
-    background-color: rgb(255, 121, 112);
-}
-
-.TodoItem.isCompleted .content{
-    text-decoration: line-through;
-    color: gray;
+  background: #f44336;
+  color: #fff;
+  border: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
 }
