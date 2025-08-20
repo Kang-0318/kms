@@ -103,19 +103,17 @@ export default function App() {
   };
 
   // 수정: 텍스트 + 시간 동시 수정
-  const onEdit = async (id, newText, newTimeDayjs, baseDateISO) => {
+  const onEdit = async (id, newText, newTimeDayjs, newDateISO) => {
     if (!newText?.trim()) return;
     try {
-      // 기존 아이템의 날짜 부분을 유지하면서 시간만 교체 (baseDateISO 없으면 선택된 날짜)
-      const baseDateStr = baseDateISO ? String(baseDateISO).slice(0, 10) : selectedDate;
+      // 새로운 날짜 있으면 그걸로, 없으면 원래 날짜
+      const baseDateStr = newDateISO ? String(newDateISO).slice(0, 10) : selectedDate;
       const update = {
         text: newText.trim(),
         date: combineDateAndTime(baseDateStr, newTimeDayjs),
       };
-
       const { data } = await axios.put(`${API}/${id}`, update);
       const updated = data?.todo ?? data?.updated ?? data;
-
       setTodos((prev) =>
         prev.map((t) => (String(t._id) === String(updated._id) ? updated : t))
       );
