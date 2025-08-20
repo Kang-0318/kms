@@ -3,21 +3,20 @@ import React, { useState } from "react";
 import TimeSelect from "./TimeSelect";
 import "./TodoEditor.css";
 
-const TodoEditor = ({ onCreate, defaultTime }) => {
+const TodoEditor = ({ onCreate }) => {
   const [text, setText] = useState("");
-  const [time, setTime] = useState(defaultTime ?? dayjs().hour(0).minute(0)); // 기본 00:00
+  const [time, setTime] = useState(dayjs().hour(9).minute(0)); // 기본 09:00
 
   const onSubmit = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
-    // onCreate에 시간(dayjs)도 같이 넘겨줌
-    onCreate(text.trim(), time);
+    onCreate(text.trim(), time);     // ✅ 시간 함께 전달
     setText("");
   };
 
   return (
-    <form className="TodoEditor" onSubmit={onSubmit} style={{display:"flex", gap:8}}>
-      <TimeSelect value={time} onChange={setTime} label="시간" />
+    <form className="TodoEditor" onSubmit={onSubmit} style={{ display:"flex", gap:8 }}>
+      <TimeSelect value={time} onChange={setTime} />
       <input
         type="text"
         placeholder="새로운 Todo..."
