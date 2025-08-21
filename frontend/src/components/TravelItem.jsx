@@ -31,35 +31,49 @@ const TodoItem = ({ todo, onDelete, onEdit, onToggle }) => {
         aria-label="완료 토글"
       />
 
-      <div
-        className="todo-content"
-        style={{ textDecoration: todo?.isCompleted ? "line-through" : "none" }}
-        title={todo?.text || ""}
-      >
-        {todo?.text}
-      </div>
+      <div className="content-wrap">
+        <div
+          className="content"
+          style={{ textDecoration: todo?.isCompleted ? "line-through" : "none" }}
+          title={todo?.text || ""}
+        >
+          {todo?.text || ""}
+        </div>
 
-      <div className="todo-date">{displayDate}</div>
+        <div className="date" aria-label="마감일">
+          {toDisplayDate(todo?.date)}
+        </div>
+      </div>
 
       <div className="btn-wrap">
         <button className="updateBtn" onClick={() => setOpen(true)}>
           수정
         </button>
-        <button className="deleteBtn" onClick={() => onDelete?.(todo._id)}>
+        <button
+          className="deleteBtn"
+          onClick={() => onDelete?.(todo._id)}
+        >
           삭제
         </button>
       </div>
 
+      {/* 수정은 모달에서만 처리 */}
       <EditModal
-  open={open}
-  initialText={todo.text}
-  initialDate={todo.date}
-  onClose={() => setOpen(false)}
-  onSave={(newText, newTimeDayjs) => {
-    onEdit?.(todo._id, newText, newTimeDayjs, todo.date); // ✅ 시간 포함 전달
-    setOpen(false);
-  }}
-/>
+        open={open}
+        initialText={todo?.text || ""}
+        initialDate={new Date(todo?.date || Date.now())}
+        onClose={() => setOpen(false)}
+        onSave={(newText, newTime) => {
+          // newTime이 dayjs면 Date로, 문자열이면 Date로 파싱
+          const newDate = isDayjs(newTime)
+            ? newTime.toDate()
+            : new Date(newTime);
+
+          // 기존 시그니처 유지: (id, newText, newDate, oldDate)
+          onEdit?.(todo._id, newText, newDate, todo?.date);
+          setOpen(false);
+        }}
+      />
     </li>
   );
 };

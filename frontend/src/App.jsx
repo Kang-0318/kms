@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import Header from "./components/Header";
 import TodoEditor from "./components/TodoEditor";
-import TodoList from "./components/TodoList";
+import TodoList from "./components/TravelList";
 
 // 환경변수 끝 슬래시 방지
 function normalizeBase(url) {
