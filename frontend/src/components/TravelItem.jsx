@@ -31,50 +31,53 @@ const TodoItem = ({ todo, onDelete, onEdit, onToggle }) => {
         aria-label="완료 토글"
       />
 
-      <div className="content-wrap">
-        <div
-          className="content"
-          style={{ textDecoration: todo?.isCompleted ? "line-through" : "none" }}
-          title={todo?.text || ""}
-        >
-          {todo?.text || ""}
-        </div>
+      <div
+        className="todo-content"
+        style={{ textDecoration: todo?.isCompleted ? "line-through" : "none" }}
+        title={todo?.text || ""}
+      >
+        {todo?.text}
+      </div>
 
-        <div className="date" aria-label="마감일">
-          {toDisplayDate(todo?.date)}
-        </div>
+      <div className="date">
+        <input
+          type="date"
+          value={dateStr}
+          onChange={(e) => setDateStr(e.target.value)}
+        />
       </div>
 
       <div className="btn-wrap">
-        <button className="updateBtn" onClick={() => setOpen(true)}>
-          수정
-        </button>
-        <button
-          className="deleteBtn"
-          onClick={() => onDelete?.(todo._id)}
-        >
-          삭제
-        </button>
+        <button className="updateBtn" onClick={saveEdit}>저장하기</button>
+        <button className="deleteBtn"
+          onClick={cancleEdit}
+        >취소</button>
       </div>
+  ) : (
+    <div className="content-wrap">
 
-      {/* 수정은 모달에서만 처리 */}
-      <EditModal
-        open={open}
-        initialText={todo?.text || ""}
-        initialDate={new Date(todo?.date || Date.now())}
-        onClose={() => setOpen(false)}
-        onSave={(newText, newTime) => {
-          // newTime이 dayjs면 Date로, 문자열이면 Date로 파싱
-          const newDate = isDayjs(newTime)
-            ? newTime.toDate()
-            : new Date(newTime);
+      <div className="content">{todo.text}</div>
+      <div className="date">{new Date(`${todo.date}`).toLocaleDateString()}</div>
+      <div className="btn-wrap">
+        <button className="updateBtn" onClick={startEdit}>수정</button>
+        <button className="deleteBtn"
+          onClick={() => onDelete(todo._id)}
+        >삭제</button>
+      </div>
+    </div>)
 
-          // 기존 시그니처 유지: (id, newText, newDate, oldDate)
-          onEdit?.(todo._id, newText, newDate, todo?.date);
-          setOpen(false);
-        }}
-      />
-    </li>
+
+<EditModal
+  open={open}
+  initialText={todo.text}
+  initialDate={todo.date}
+  onClose={() => setOpen(false)}
+  onSave={(newText, newTimeDayjs) => {
+    onEdit?.(todo._id, newText, newTimeDayjs, todo.date); // ✅ 시간 포함 전달
+    setOpen(false);
+  }}
+/>
+    </li >
   );
 };
 
