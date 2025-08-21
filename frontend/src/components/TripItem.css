@@ -1,8 +1,11 @@
 /* 리스트 컨테이너가 <ul>이면 기본 여백 제거 추천 */
-.TodoList { padding-left: 0; margin: 0; }
+.TripList {
+  padding-left: 0;
+  margin: 0;
+}
 
 /* 아이템을 4열 그리드: 체크박스 | 내용 | 날짜 | 버튼들 */
-.TodoItem {
+.TripItem {
   list-style: none;
   display: grid;
   grid-template-columns: auto 1fr auto auto;
@@ -15,20 +18,20 @@
   background: #fff;
 }
 
-.todo-checkbox {
+.trip-checkbox {
   width: 18px;
   height: 18px;
 }
 
-.todo-content {
-  min-width: 0;            /* 🔑 줄바꿈/말줄임 위해 필요 */
+.trip-content {
+  min-width: 0; /* 🔑 줄바꿈/말줄임 위해 필요 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 15px;
 }
 
-.todo-date {
+.trip-date {
   color: #666;
   font-size: 14px;
   white-space: nowrap;
