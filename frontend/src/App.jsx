@@ -41,7 +41,6 @@ export default function App() {
     const fetchTrips = async () => {
       try {
         const res = await axios.get(API);
-        // 서버가 { trips: [...] } 또는 [] 형태 모두 대응
         const data = Array.isArray(res.data) ? res.data : res.data?.trips ?? [];
         setTrips(data);
       } catch (error) {
