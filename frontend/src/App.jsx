@@ -36,12 +36,14 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null); // 숫자 (1부터)
   const [selectedDate, setSelectedDate] = useState(null); // yyyy-mm-dd
 
+  // 🔍 검색어
+  const [query, setQuery] = useState("");
+
   // 목록 불러오기
   useEffect(() => {
     const fetchTrips = async () => {
       try {
         const res = await axios.get(API);
-        // 서버가 { trips: [...] } 또는 [] 형태 모두 대응
         const data = Array.isArray(res.data) ? res.data : res.data?.trips ?? [];
         setTrips(data);
       } catch (error) {
@@ -65,22 +67,27 @@ export default function App() {
     setSelectedDate(null);
   };
 
-  // 선택된 날짜/Day의 여행 항목만 필터링
+  // 🔎 검색 + (선택된 날짜/Day 조건) 동시 필터
   const filteredTrips = useMemo(() => {
-    if (!selectedDate && !selectedDay) return trips;
+    const text = query.trim().toLowerCase();
+    if (!text) return []; // ← 검색어 없으면 아무 것도 표시하지 않음
 
     return trips.filter((t) => {
+      const nameHit = (t.name ?? t.text ?? "").toLowerCase().includes(text);
+      const dateStr = t.date ? String(t.date).slice(0, 10) : "";
+      const dateHit = dateStr.includes(text);
+
+      // 선택된 날짜/Day가 있다면 그것도 만족해야 함
       const tDate =
         t.date || t.targetDate || t.when || t.tripDate || t.createdDate;
       const tDayNo = t.dayNo || t.day || t.dayIndex;
 
-      if (selectedDate && tDate)
-        return String(tDate).slice(0, 10) === selectedDate;
-      if (selectedDay && tDayNo)
-        return Number(tDayNo) === Number(selectedDay);
-      return false;
+      const dateOk = selectedDate ? (tDate ? String(tDate).slice(0, 10) === selectedDate : false) : true;
+      const dayOk = selectedDay ? (tDayNo ? Number(tDayNo) === Number(selectedDay) : false) : true;
+
+      return (nameHit || dateHit) && dateOk && dayOk;
     });
-  }, [trips, selectedDate, selectedDay]);
+  }, [trips, query, selectedDate, selectedDay]);
 
   // 추가: 선택한 날짜 + 입력한 시간으로 저장 (여행명 name 필드 사용)
   const onCreate = async (tripName, timeDayjs) => {
@@ -88,11 +95,11 @@ export default function App() {
     if (!name) return;
     try {
       const payload = {
-        name, // ✅ 여행명
-        text: name, // (서버가 text만 읽는 구버전 호환)
+        name,
+        text: name, // (구버전 호환)
         date: combineDateAndTime(selectedDate, timeDayjs),
+        ...(selectedDay ? { dayNo: selectedDay } : {}),
       };
-      if (selectedDay) payload.dayNo = selectedDay;
 
       const res = await axios.post(API, payload);
       const created = res.data?.trip ?? res.data;
@@ -107,13 +114,11 @@ export default function App() {
     }
   };
 
-
   // 수정: 여행명(name) + 시간 동시 수정
   const onEdit = async (id, newName, newTimeDayjs, baseDateISO) => {
     const name = newName?.trim();
     if (!name) return;
     try {
-      // 기존 날짜 부분 유지하면서 시간 교체 (baseDateISO 없으면 선택된 날짜)
       const baseDateStr = baseDateISO
         ? String(baseDateISO).slice(0, 10)
         : selectedDate;
@@ -128,7 +133,6 @@ export default function App() {
       const updated = data?.trip ?? data?.updated ?? data;
 
       setTrips((prev) =>
-
         prev.map((t) => (String(t._id) === String(updated._id) ? updated : t))
       );
     } catch (error) {
@@ -136,7 +140,7 @@ export default function App() {
     }
   };
 
-  // 완료 체크 토글 (필요 시 유지)
+  // 완료 체크 토글
   const onToggle = async (id, nextChecked) => {
     try {
       const { data } = await axios.patch(`${API}/${id}/check`, {
@@ -179,14 +183,24 @@ export default function App() {
         onSelectDay={handleSelectDay}
       />
 
+      {/* 🔎 검색 입력 (검색어 있을 때만 결과 노출) */}
+      <div style={{ margin: "10px 0 16px" }}>
+        <input
+          type="text"
+          placeholder="여행명/날짜(YYYY-MM-DD) 검색"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{ width: "100%", padding: 12, border: "1px solid #eee", borderRadius: 6 }}
+        />
+      </div>
+
       {selectedDay && selectedDate && (
         <p style={{ margin: "8px 0 12px" }}>
           선택한 일정: <b>Day {selectedDay}</b> ({selectedDate})
         </p>
       )}
 
-      {/* TripEditor는 onCreate(name, timeDayjs) 형태로 콜백 호출 */}
-      <TripEditor onCreate={onCreate} />
+      <TripEditor onCreate={onCreate} selectedDate={selectedDate} />
 
       <TripList
         trips={filteredTrips}
