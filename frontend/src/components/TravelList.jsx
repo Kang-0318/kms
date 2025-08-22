@@ -1,7 +1,7 @@
 import React,{useState,useMemo} from 'react'
 import './TravelList.css'
 import TodoItem from './TravelItem'
-const TodoList = ({todos,onDelete,onUpdateChecked,onUpdateTodo}) => {
+const TripList = ({todos,onDelete,onUpdateChecked,onUpdateTodo}) => {
 
   const [q, setQ]=useState('')
 
@@ -37,4 +37,4 @@ const TodoList = ({todos,onDelete,onUpdateChecked,onUpdateTodo}) => {
   )
 }
 
-export default TodoList
+export default TripList

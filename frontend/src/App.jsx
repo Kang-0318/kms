@@ -4,13 +4,9 @@ import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import Header from "./components/Header";
-<<<<<<< HEAD
-import TodoEditor from "./components/TodoEditor";
+import TodoEditor from "./components/TripEditor";
 import TodoList from "./components/TravelList";
-=======
-import TripEditor from "./components/TripEditor";
-import TripList from "./components/TripList";
->>>>>>> f5fd5d1240bd26726d26dc36cdb7c1fcf4c9b4e7
+
 
 // 환경변수 끝 슬래시 방지
 function normalizeBase(url) {
