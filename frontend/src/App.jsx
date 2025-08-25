@@ -42,7 +42,6 @@ export default function App() {
     const fetchTrips = async () => {
       try {
         const res = await axios.get(API);
-        // 서버가 { trips: [...] } 또는 [] 형태 모두 대응
         const data = Array.isArray(res.data) ? res.data : res.data?.trips ?? [];
         setTrips(data);
       } catch (error) {
@@ -108,6 +107,7 @@ export default function App() {
     }
   };
 
+
   // 수정: 여행명(name) + 시간 동시 수정
   const onEdit = async (id, newName, newTimeDayjs, baseDateISO) => {
     const name = newName?.trim();
@@ -117,16 +117,18 @@ export default function App() {
       const baseDateStr = baseDateISO
         ? String(baseDateISO).slice(0, 10)
         : selectedDate;
+
       const update = {
         name,
         text: name, // (구버전 호환)
         date: combineDateAndTime(baseDateStr, newTimeDayjs),
       };
-
       const { data } = await axios.put(`${API}/${id}`, update);
+
       const updated = data?.trip ?? data?.updated ?? data;
 
       setTrips((prev) =>
+
         prev.map((t) => (String(t._id) === String(updated._id) ? updated : t))
       );
     } catch (error) {

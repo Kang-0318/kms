@@ -1,9 +1,56 @@
-import React, { useMemo, useState } from "react";
-import EditModal from "./EditModal";
-import "./TripItem.css";
+import React, { useEffect, useState, useMemo } from 'react'
+import "./TripItem.css"
+const TripItem = ({ trip, onDelete, onUpdateChecked, onUpdatetrip }) => {
 
-const TripItem = ({ trip, onDelete, onEdit, onToggle }) => {
+  const [editing, setEditing] = useState(false)
+  const [text, setText] = useState(trip.text)
   const [open, setOpen] = useState(false);
+  const isCompleted = !!trip.isCompleted
+
+  const toYmd = (d) => new Date(d).toISOString().slice(0, 10)
+  const pickDate = (t) => t?.date ?? t?.createdAt ?? new Date()
+
+  const [dateStr, setDateStr] = useState(toYmd(pickDate(trip)))
+
+  useEffect(() => {
+    if (!editing) {
+      setText(trip.text)
+      setDateStr(toYmd(pickDate(trip)))
+    }
+  }, [trip, editing])
+
+  const startEdit = () => {
+    setText(trip.text)
+    setDateStr(toYmd(pickDate(trip)))
+    setEditing(true)
+  }
+  const cancleEdit = () => {
+    setText(trip.text)
+    setEditing(false)
+  }
+  const saveEdit = async () => {
+    const next = text.trim()
+    const prevYmd = toYmd(pickDate(trip))
+    if (!next || next === trip.text && prevYmd === dateStr) {
+      return setEditing(false)
+    }
+
+    const nextDateISO = new Date(`${dateStr}T00:00:00`).toISOString()
+
+
+
+    await onUpdatetrip(trip._id, {
+      text: next,
+      date: nextDateISO
+    })
+
+    setEditing(false)
+  }
+
+  const handleKeyDown = () => {
+    if (e.key == 'Enter') saveEdit()
+    if (e.key == 'Escape') cancleEdit()
+  }
 
   const displayDate = useMemo(() => {
     try {
@@ -16,47 +63,55 @@ const TripItem = ({ trip, onDelete, onEdit, onToggle }) => {
     }
   }, [trip?.date]);
 
+
   return (
-    <li className="TripItem">
+    <div className={`TripItem ${isCompleted ? 'isCompleted' : ''}`}>
       <input
-        className="trip-checkbox"
         type="checkbox"
-        checked={!!trip?.isCompleted}
-        onChange={(e) => onToggle?.(trip._id, e.target.checked)}
-        aria-label="완료 토글"
-      />
+        checked={trip.isCompleted}
+        onChange={() => onUpdateChecked(trip._id, !trip.isCompleted)}
+        readOnly />
+      {editing ? (<div className="edit-wrap">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder='수정할 내용을 입력하세요'
+        />
 
-      <div
-        className="trip-content"
-        style={{ textDecoration: trip?.isCompleted ? "line-through" : "none" }}
-        title={trip?.name || ""}
-      >
-        {trip?.name}
+        <div className="date">
+          <input
+            type="date"
+            value={dateStr}
+            onChange={(e) => setDateStr(e.target.value)}
+          />
+        </div>
+        <div className="btn-wrap">
+          <button className="updateBtn" onClick={saveEdit}>저장하기</button>
+          <button className="deleteBtn"
+            onClick={cancleEdit}
+          >취소</button>
+        </div>
       </div>
+      ) : (
+        <div className="content-wrap">
 
-      <div className="trip-date">{displayDate}</div>
+          <div className="content">{trip.name}</div>
+          <div className="date">{new Date(`${trip.date}`).toLocaleDateString()}</div>
+          <div className="btn-wrap">
+            <button className="updateBtn" onClick={startEdit}>수정</button>
+            <button className="deleteBtn"
+              onClick={() => onDelete(trip._id)}
+            >삭제</button>
+          </div>
+        </div>)}
 
-      <div className="btn-wrap">
-        <button className="updateBtn" onClick={() => setOpen(true)}>
-          수정
-        </button>
-        <button className="deleteBtn" onClick={() => onDelete?.(trip._id)}>
-          삭제
-        </button>
-      </div>
+        
 
-      <EditModal
-        open={open}
-        initialText={trip.name}
-        initialDate={trip.date}
-        onClose={() => setOpen(false)}
-        onSave={(newText, newTimeDayjs) => {
-          onEdit?.(trip._id, newText, newTimeDayjs, trip.date);
-          setOpen(false);
-        }}
-      />
-    </li>
-  );
-};
 
-export default TripItem;
+    </div>
+  )
+}
+
+export default TripItem

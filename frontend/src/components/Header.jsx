@@ -57,7 +57,9 @@ export default function Header({
 
   return (
     <header className="header">
-      <h3>여행 날짜 🗓️</h3>
+      <h3>
+        <a href="index.html">여행 🗓️</a>
+        </h3>
       <h1>{ddayText}</h1>
 
       <div className="date-range" style={{ marginTop: 8 }}>
@@ -113,3 +115,4 @@ export default function Header({
   /* header edit test2 */
   );
 }
+
