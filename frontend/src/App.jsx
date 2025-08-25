@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import Header from "./components/Header";
 import TripEditor from "./components/TripEditor";
-import TripList from "./components/TripList";
+// ✨ TripList 대신 카테고리 뷰
+import TripCategories from "./components/TripCategories";
 
 // 환경변수 끝 슬래시 방지
 function normalizeBase(url) {
@@ -14,14 +15,9 @@ function normalizeBase(url) {
 
 // "YYYY-MM-DD" + dayjs 시간 → JS Date
 function combineDateAndTime(dateStr, timeDayjs) {
-  const base = dateStr ? dayjs(dateStr) : dayjs(); // 날짜(없으면 오늘)
-  const t = timeDayjs ?? dayjs(); // 시각
-  return base
-    .hour(t.hour())
-    .minute(t.minute())
-    .second(0)
-    .millisecond(0)
-    .toDate();
+  const base = dateStr ? dayjs(dateStr) : dayjs();
+  const t = timeDayjs ?? dayjs();
+  return base.hour(t.hour()).minute(t.minute()).second(0).millisecond(0).toDate();
 }
 
 export default function App() {
@@ -31,12 +27,12 @@ export default function App() {
   const [trips, setTrips] = useState([]);
 
   // 여행 기간 & 선택된 Day 상태
-  const [startDate, setStartDate] = useState(""); // yyyy-mm-dd
-  const [endDate, setEndDate] = useState(""); // yyyy-mm-dd
-  const [selectedDay, setSelectedDay] = useState(null); // 숫자 (1부터)
-  const [selectedDate, setSelectedDate] = useState(null); // yyyy-mm-dd
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
 
-  // 🔍 검색어
+  // 🔍 여행명 검색어 (이름으로만 필터)
   const [query, setQuery] = useState("");
 
   // 목록 불러오기
@@ -67,27 +63,14 @@ export default function App() {
     setSelectedDate(null);
   };
 
-  // 🔎 검색 + (선택된 날짜/Day 조건) 동시 필터
-  const filteredTrips = useMemo(() => {
-    const text = query.trim().toLowerCase();
-    if (!text) return []; // ← 검색어 없으면 아무 것도 표시하지 않음
-
-    return trips.filter((t) => {
-      const nameHit = (t.name ?? t.text ?? "").toLowerCase().includes(text);
-      const dateStr = t.date ? String(t.date).slice(0, 10) : "";
-      const dateHit = dateStr.includes(text);
-
-      // 선택된 날짜/Day가 있다면 그것도 만족해야 함
-      const tDate =
-        t.date || t.targetDate || t.when || t.tripDate || t.createdDate;
-      const tDayNo = t.dayNo || t.day || t.dayIndex;
-
-      const dateOk = selectedDate ? (tDate ? String(tDate).slice(0, 10) === selectedDate : false) : true;
-      const dayOk = selectedDay ? (tDayNo ? Number(tDayNo) === Number(selectedDay) : false) : true;
-
-      return (nameHit || dateHit) && dateOk && dayOk;
-    });
-  }, [trips, query, selectedDate, selectedDay]);
+  // ✨ 선택된 날짜에 매칭되는 여행명 (없으면 null)
+  const selectedTripName = useMemo(() => {
+    if (!selectedDate) return null;
+    const hit = trips.find(
+      (t) => t.date && String(t.date).slice(0, 10) === selectedDate
+    );
+    return hit?.name ?? null;
+  }, [trips, selectedDate]);
 
   // 추가: 선택한 날짜 + 입력한 시간으로 저장 (여행명 name 필드 사용)
   const onCreate = async (tripName, timeDayjs) => {
@@ -183,27 +166,30 @@ export default function App() {
         onSelectDay={handleSelectDay}
       />
 
-      {/* 🔎 검색 입력 (검색어 있을 때만 결과 노출) */}
+      {/* 🔎 여행명으로 검색 */}
       <div style={{ margin: "10px 0 16px" }}>
         <input
           type="text"
-          placeholder="여행명/날짜(YYYY-MM-DD) 검색"
+          placeholder="여행명으로 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           style={{ width: "100%", padding: 12, border: "1px solid #eee", borderRadius: 6 }}
         />
       </div>
 
-      {selectedDay && selectedDate && (
+      {/* 선택 상태: D-N 대신 여행명 우선 표기 */}
+      {selectedDate && (
         <p style={{ margin: "8px 0 12px" }}>
-          선택한 일정: <b>Day {selectedDay}</b> ({selectedDate})
+          선택한 일정: <b>{selectedTripName ?? (selectedDay ? `Day ${selectedDay}` : "여행 미지정")}</b> ({selectedDate})
         </p>
       )}
 
       <TripEditor onCreate={onCreate} selectedDate={selectedDate} />
 
-      <TripList
-        trips={filteredTrips}
+      {/* ✨ 여행명 카테고리(아코디언)로 일정 조작 */}
+      <TripCategories
+        trips={trips}        // 전체 전달 → 내부에서 name으로 그룹
+        query={query}        // 검색어 있으면 여행명으로 필터
         onDelete={onDelete}
         onEdit={onEdit}
         onToggle={onToggle}

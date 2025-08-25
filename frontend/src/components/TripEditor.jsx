@@ -20,8 +20,7 @@ const TripEditor = ({ onCreate, selectedDate }) => {
 
     onCreate(text.trim(), time); // App에서 selectedDate와 합쳐 저장
     setText("");
-    // 필요하면 시간도 초기화하고 싶다면 주석 해제
-    // setTime(dayjs().hour(9).minute(0));
+    // setTime(dayjs().hour(9).minute(0)); // 필요 시 시간도 초기화
     inputRef.current?.focus();
   };
 
@@ -36,7 +35,7 @@ const TripEditor = ({ onCreate, selectedDate }) => {
         value={text}
         onChange={(e) => setText(e.target.value)}
         style={{ flex: 1 }}
-        disabled={!isValidDate}         // 날짜 형식이 유효할 때만 입력 가능
+        disabled={!isValidDate}
         aria-label="여행명 입력"
         autoComplete="off"
       />
