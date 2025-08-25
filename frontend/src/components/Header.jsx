@@ -1,6 +1,6 @@
-// src/components/Header.jsx
 import dayjs from "dayjs";
 import React, { useMemo } from "react";
+import "./header.css"; // 👈 CSS 불러오기
 
 function buildDates(startDate, endDate) {
   if (!startDate || !endDate) return [];
@@ -19,8 +19,8 @@ function getDDayText(startDate) {
   const s = dayjs(startDate, "YYYY-MM-DD", true).startOf("day");
   if (!s.isValid()) return "";
   const diff = s.diff(today, "day");
-  if (diff === 0) return "D‑day";
-  if (diff > 0) return `D‑${diff}`;
+  if (diff === 0) return "D-day";
+  if (diff > 0) return `D-${diff}`;
   return `D+${Math.abs(diff)}`;
 }
 
@@ -36,48 +36,17 @@ export default function Header({
   const dday = getDDayText(startDate);
 
   return (
-    <div className="Header" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {/* Top bar: 홈 버튼 + D-? */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          marginTop: 4,
-        }}
-      >
-        <button
-          type="button"
-          onClick={onHome}
-          title="홈으로"
-          style={{
-            background: "transparent",
-            border: "none",
-            fontSize: 20,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
+    <div className="Header">
+      {/* Top bar */}
+      <div className="top-bar">
+        <button type="button" onClick={onHome} className="home-btn">
           여행 <span role="img" aria-label="emoji">🧳</span>
         </button>
-        {!!dday && (
-          <div
-            style={{
-              fontWeight: 700,
-              fontSize: 18,
-              color: "#111",
-              minWidth: 56,
-              textAlign: "right",
-            }}
-          >
-            {dday}
-          </div>
-        )}
+        {!!dday && <div className="dday">{dday}</div>}
       </div>
 
       {/* 날짜 선택 */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div className="date-range">
         <input
           type="date"
           value={startDate || ""}
@@ -91,21 +60,18 @@ export default function Header({
         />
       </div>
 
-      {/* Day 미리보기(옵션) */}
+      {/* 비행기 애니메이션 추가 */}
+      <div className="airplane" aria-label="airplane" role="img">✈️</div>
+
+      {/* Day 미리보기 */}
       {!hideDayPreview && dates.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="day-list">
           {dates.map((d, i) => (
             <button
               key={d}
               type="button"
               onClick={() => onSelectDay?.(i + 1, d)}
-              style={{
-                textAlign: "left",
-                padding: "10px 12px",
-                borderRadius: 8,
-                border: "1px solid #eee",
-                background: "#fff",
-              }}
+              className="day-item"
             >
               <b>Day {i + 1}</b> <span style={{ color: "#777" }}>{d}</span>
             </button>
