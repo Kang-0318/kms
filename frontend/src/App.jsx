@@ -4,8 +4,8 @@ import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import Header from "./components/Header";
-import TodoEditor from "./components/TripEditor";
-import TodoList from "./components/TravelList";
+import TripEditor from "./components/TripEditor";
+import TripList from "./components/TripList";
 
 
 // 환경변수 끝 슬래시 방지
