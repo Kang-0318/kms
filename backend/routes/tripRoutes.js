@@ -1,4 +1,4 @@
-// routes/trips.js
+// backend/routes/tripRoutes.js
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
@@ -12,163 +12,61 @@ const ensureObjectId = (id, res) => {
   return true;
 };
 
-// CREATE: POST /api/trips
+// READ (전체)
+router.get("/", async (req, res) => {
+  try {
+    const trips = await Trip.find().sort({ date: 1, createdAt: 1 });
+    res.status(200).json(trips);
+  } catch (e) {
+    res.status(400).json({ error: "데이터 조회 실패" });
+  }
+});
+
+// CREATE
 router.post("/", async (req, res) => {
   try {
-    const { name, date, dayNo, isCompleted } = req.body;
+    let { name, text, date, isCompleted } = req.body;
+    name = (name ?? "").toString().trim();
+    text = (text ?? "").toString().trim();
 
-    if (!name || !String(name).trim()) {
-      return res.status(400).json({ message: "name은 필수입니다." });
-    }
+    if (!name) return res.status(400).json({ message: "name은 필수입니다." });
+    if (!text) return res.status(400).json({ message: "text는 필수입니다." });
+    if (!date) return res.status(400).json({ message: "date는 필수입니다." });
 
-    const newTrip = new Trip({
-      name: String(name).trim(),
-      date: date ? new Date(date) : Date.now(),
-      ...(dayNo !== undefined ? { dayNo } : {}),
-      ...(typeof isCompleted === "boolean" ? { isCompleted } : {})
+    const trip = new Trip({
+      name,
+      text,
+      date: new Date(date),
+      ...(typeof isCompleted === "boolean" ? { isCompleted } : {}),
     });
-
-    const trip = await newTrip.save();
-    return res.status(201).json({ trip });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "여행을 저장하지 못했습니다." });
+    const saved = await trip.save();
+    res.status(201).json(saved);
+  } catch (e) {
+    res.status(400).json({ error: "여행 저장 실패" });
   }
 });
 
-// READ ALL: GET /api/trips
-router.get("/", async (_req, res) => {
-  try {
-    const trips = await Trip.find().sort({ createdAt: -1 });
-    return res.status(200).json({ trips });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "데이터를 불러오지 못했습니다." });
-  }
-});
-
-// READ ONE: GET /api/trips/:id
-router.get("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!ensureObjectId(id, res)) return;
-
-    const trip = await Trip.findById(id);
-    if (!trip) {
-      return res.status(404).json({ message: "해당 Id의 trip가 없습니다." });
-    }
-    return res.status(200).json({ trip });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "데이터를 불러오지 못했습니다." });
-  }
-});
-
-// UPDATE (전체): PUT /api/trips/:id
+// UPDATE
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     if (!ensureObjectId(id, res)) return;
 
-    const { name, date, dayNo, isCompleted } = req.body;
-    const updateData = {};
-    if (name !== undefined) updateData.name = String(name).trim();
-    if (date !== undefined) updateData.date = new Date(date);
-    if (dayNo !== undefined) updateData.dayNo = dayNo;
-    if (typeof isCompleted === "boolean") updateData.isCompleted = isCompleted;
+    const update = {};
+    if (typeof req.body.name === "string") update.name = req.body.name.trim();
+    if (typeof req.body.text === "string") update.text = req.body.text.trim();
+    if (req.body.date) update.date = new Date(req.body.date);
+    if (typeof req.body.isCompleted === "boolean") update.isCompleted = req.body.isCompleted;
 
-    const trip = await Trip.findByIdAndUpdate(id, updateData, {
+    const updated = await Trip.findByIdAndUpdate(id, update, {
       new: true,
       runValidators: true,
-      context: "query",
     });
+    if (!updated) return res.status(404).json({ message: "해당 Id의 trip가 없습니다." });
 
-    if (!trip) {
-      return res.status(404).json({ message: "해당 Id의 trip가 없습니다." });
-    }
-    return res.status(200).json({ trip });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "데이터를 수정하지 못했습니다." });
-  }
-});
-
-// DELETE: DELETE /api/trips/:id
-router.delete("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!ensureObjectId(id, res)) return;
-
-    const deleted = await Trip.findByIdAndDelete(id);
-    if (!deleted) {
-      return res.status(404).json({ message: "해당 Id의 trip가 없습니다." });
-    }
-
-    const trips = await Trip.find().sort({ createdAt: -1 });
-    return res.status(200).json({
-      message: "1개 삭제하기 성공",
-      deletedId: deleted._id,
-      trips,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "데이터를 불러오지 못했습니다." });
-  }
-});
-
-// PATCH 체크 토글: PATCH /api/trips/:id/check
-router.patch("/:id/check", async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!ensureObjectId(id, res)) return;
-
-    const { isCompleted } = req.body;
-    if (typeof isCompleted !== "boolean") {
-      return res
-        .status(400)
-        .json({ message: "isCompleted는 반드시 boolean이어야 합니다." });
-    }
-
-    const trip = await Trip.findByIdAndUpdate(
-      id,
-      { isCompleted },
-      { new: true, runValidators: true, context: "query" }
-    );
-
-    if (!trip) {
-      return res.status(404).json({ message: "해당 Id의 trip가 없습니다." });
-    }
-    return res.status(200).json({ trip });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "데이터를 수정하지 못했습니다." });
-  }
-});
-
-// PATCH 이름만 수정: PATCH /api/trips/:id/name
-router.patch("/:id/name", async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!ensureObjectId(id, res)) return;
-
-    const { name } = req.body;
-    if (!name || !String(name).trim()) {
-      return res.status(400).json({ message: "name은 필수입니다." });
-    }
-
-    const trip = await Trip.findByIdAndUpdate(
-      id,
-      { name: String(name).trim() },
-      { new: true, runValidators: true, context: "query" }
-    );
-
-    if (!trip) {
-      return res.status(404).json({ message: "해당 Id의 trip가 없습니다." });
-    }
-    return res.status(200).json({ trip });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "데이터를 수정하지 못했습니다." });
+    res.status(200).json(updated);
+  } catch (e) {
+    res.status(400).json({ error: "수정 실패" });
   }
 });
 
