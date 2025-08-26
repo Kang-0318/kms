@@ -7,12 +7,10 @@ import Header from "./components/Header";
 import TripCategories from "./components/TripCategories";
 import TripPlanner from "./components/TripPlanner";
 
-// 환경변수 끝 슬래시 방지
 function normalizeBase(url) {
   return url?.replace(/\/+$/, "") ?? "";
 }
 
-// 시작~종료 사이 날짜 배열
 function buildDateStrings(startDate, endDate) {
   if (!startDate || !endDate) return [];
   const s = dayjs(startDate, "YYYY-MM-DD", true);
@@ -31,7 +29,7 @@ export default function App() {
   const [trips, setTrips] = useState([]);
   const [startDate, setStartDate] = useState(""); // YYYY-MM-DD
   const [endDate, setEndDate] = useState("");     // YYYY-MM-DD
-  const [showCategories, setShowCategories] = useState(true); // 리스트 표시 여부
+  const [showCategories, setShowCategories] = useState(true);
 
   const rangeDates = useMemo(
     () => buildDateStrings(startDate, endDate),
@@ -43,7 +41,6 @@ export default function App() {
     if (!rangeReady) setShowCategories(true);
   }, [rangeReady]);
 
-  // 초기 목록 불러오기
   useEffect(() => {
     (async () => {
       try {
@@ -56,26 +53,22 @@ export default function App() {
     })();
   }, [API]);
 
-  // 날짜 변경: 계획 모드 진입 → 리스트 숨김
   const handleRangeChange = (start, end) => {
     setStartDate(start);
     setEndDate(end);
     setShowCategories(false);
   };
 
-  // 홈 버튼: 날짜 초기화 + 리스트 표시
   const handleHome = () => {
     setStartDate("");
     setEndDate("");
     setShowCategories(true);
   };
 
-  // (선택) 상단 Day 클릭을 쓰고 싶다면 사용
   const handleSelectDay = (dayNo, dateStr) => {
     console.log("select day", dayNo, dateStr);
   };
 
-  // TripPlanner → 여행명 확정 시 Day별 일정 생성 후 리스트 다시 표시 + 날짜 초기화
   const handleCommit = async (name, draftByDate) => {
     const entries = Object.entries(draftByDate);
     if (entries.length === 0) return;
@@ -85,8 +78,8 @@ export default function App() {
       for (const [date, items] of entries) {
         for (const it of items) {
           const payload = {
-            name,               // 여행명(그룹)
-            text: it.text,      // ✅ 일정명
+            name,
+            text: it.text,
             date: new Date(`${date}T00:00:00.000Z`),
           };
           const r = await axios.post(API, payload);
@@ -95,7 +88,7 @@ export default function App() {
       }
       setTrips((prev) => [...created, ...prev]);
 
-      // ✅ 계획 확정 이후: 날짜 초기화 → TripPlanner 사라지고 리스트만 보이게
+      // 여행명 추가 후: 날짜 초기화 + 리스트 표시
       setStartDate("");
       setEndDate("");
       setShowCategories(true);
@@ -104,11 +97,26 @@ export default function App() {
     }
   };
 
-  // =========================
-  // TripItem 에서 쓸 콜백들
-  // =========================
+  // ✅ 첫 화면(날짜 미선택)에서 TripCategories → Day 밑 “일정 추가”용
+  const onQuickAdd = async (tripName, dateStr, itemText) => {
+    const name = (tripName ?? "").trim();
+    const text = (itemText ?? "").trim();
+    if (!name || !text || !dateStr) return;
+    try {
+      const payload = {
+        name,
+        text,
+        date: new Date(`${dateStr}T00:00:00.000Z`),
+      };
+      const { data } = await axios.post(API, payload);
+      const created = data?.trip ?? data;
+      setTrips((prev) => [created, ...prev]);
+    } catch (e) {
+      console.error("빠른 일정 추가 실패", e);
+    }
+  };
 
-  // 체크 토글 (간단히 PUT으로 isCompleted만 갱신)
+  // 체크 토글
   const onUpdateChecked = async (id, nextChecked) => {
     try {
       const { data } = await axios.put(`${API}/${id}`, { isCompleted: nextChecked });
@@ -118,9 +126,8 @@ export default function App() {
     }
   };
 
-  // 일정 수정(텍스트 + 날짜)
+  // 수정
   const onEdit = async (id, update) => {
-    // update: { text?: string, dateStr?: 'YYYY-MM-DD' }
     try {
       const body = {};
       if (typeof update.text === "string") body.text = update.text.trim();
@@ -150,11 +157,10 @@ export default function App() {
         endDate={endDate}
         onRangeChange={handleRangeChange}
         onSelectDay={handleSelectDay}
-        hideDayPreview      // 상단 Day 미리보기는 숨김 (계획 모드는 TripPlanner에서)
-        onHome={handleHome} // 홈 버튼 동작
+        hideDayPreview
+        onHome={handleHome}
       />
 
-      {/* 날짜가 유효할 때만 계획 모드(여행명 + Day별 일정 임시 입력) */}
       {rangeReady && (
         <TripPlanner
           startDate={startDate}
@@ -164,7 +170,6 @@ export default function App() {
         />
       )}
 
-      {/* 여행명 카테고리: 날짜를 고르는 동안은 숨김, 추가 후엔 표시 */}
       {showCategories && (
         <div style={{ marginTop: 16 }}>
           <TripCategories
@@ -172,6 +177,8 @@ export default function App() {
             onDelete={onDelete}
             onEdit={onEdit}
             onUpdateChecked={onUpdateChecked}
+            allowAdd={!rangeReady}
+            onQuickAdd={onQuickAdd}
           />
         </div>
       )}
