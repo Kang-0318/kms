@@ -1,6 +1,7 @@
 // src/components/TripCategories.jsx
 import React, { useMemo, useState } from "react";
 import TripItem from "./TripItem";
+import "./TripCategories.css"
 
 /**
  * props:
@@ -102,33 +103,8 @@ export default function TripCategories({
                       onQuickAdd(name, dateStr, text);
                       e.currentTarget.reset();
                       dateEl?.focus();
-                    }}
-                    className="TripEditor"
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "auto 1fr auto",
-                      gap: 8,
-                      alignItems: "center",
-                      padding: 10,
-                      border: "1px dashed #e9e9e9",
-                      borderRadius: 8,
-                      background: "#fff",
-                    }}
+                    }}                    
                   >
-                    <input
-                      name={tripAddDateName}
-                      type="date"
-                      defaultValue={start || ""}
-                      min={start || undefined}
-                      max={end || undefined}
-                      style={{ minWidth: 160 }}
-                    />
-                    <input
-                      name={tripAddTextName}
-                      type="text"
-                      placeholder="일정 내용 입력..."
-                    />
-                    <button type="submit">추가</button>
                   </form>
                 )}
 
@@ -185,13 +161,15 @@ export default function TripCategories({
                               className="TripEditor"
                               style={{ display: "flex", gap: 8, marginTop: 10 }}
                             >
+                              <div className="add-wrap">
                               <input
                                 name={inputName}
                                 type="text"
-                                placeholder="이 날짜에 일정 추가..."
+                                placeholder="일정 추가"
                                 style={{ flex: 1 }}
                               />
-                              <button type="submit">추가</button>
+                              <button className="addBtn" type="submit">추가</button>
+                              </div>
                             </form>
                           )}
                         </div>

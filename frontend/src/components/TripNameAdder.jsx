@@ -21,7 +21,7 @@ export default function TripNameAdder({ onCreateRange, rangeReady }) {
       <input
         ref={inputRef}
         type="text"
-        placeholder={rangeReady ? "여행명 입력..." : "먼저 시작일과 종료일을 선택하세요"}
+        placeholder={"여행명 입력"}
         value={name}
         onChange={(e) => setName(e.target.value)}
         style={{ flex: 1 }}
@@ -29,7 +29,7 @@ export default function TripNameAdder({ onCreateRange, rangeReady }) {
         autoComplete="off"
         aria-label="여행명 입력"
       />
-      <button type="submit" disabled={!ready}>
+      <button className="add-Btn" type="submit" disabled={!ready}>
         추가
       </button>
     </form>

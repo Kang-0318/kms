@@ -2,6 +2,7 @@
 import dayjs from "dayjs";
 import React, { useMemo, useState } from "react";
 import "./TripList.css";
+import "./TripPlanner.css"
 
 /**
  * props:
@@ -72,16 +73,19 @@ export default function TripPlanner({ startDate, endDate, onCommit, rangeReady }
         className="TripEditor"
         style={{ display: "flex", gap: 8 }}
       >
-        <input
-          type="text"
-          placeholder="여행명 입력..."
-          value={draftName}
-          onChange={(e) => setDraftName(e.target.value)}
-          style={{ flex: 1 }}
-        />
-        <button type="submit" disabled={!canCommit}>
-          여행명 추가
-        </button>
+        <div className="title-wrap">
+          <input
+          className="title"
+            type="text"
+            placeholder="여행명 입력"
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <button className="titleBtn" type="submit" disabled={!canCommit}>
+            여행명 추가
+          </button>
+        </div>
       </form>
 
       {/* Day 미리보기 + 일정 입력(계획 모드 전용) */}
@@ -113,7 +117,7 @@ export default function TripPlanner({ startDate, endDate, onCommit, rangeReady }
             </button>
 
             {opened && (
-              <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="form-wrap" style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                 {/* 임시 일정 목록 */}
                 {list.length === 0 ? (
                   <div style={{ color: "#888" }}>아직 추가한 일정이 없습니다.</div>
@@ -160,10 +164,11 @@ export default function TripPlanner({ startDate, endDate, onCommit, rangeReady }
                     e.target.elements["draftText"]?.focus();
                   }}
                   className="TripEditor"
-                  style={{ display: "flex", gap: 8 }}
                 >
-                  <input name="draftText" type="text" placeholder="일정 내용 입력..." style={{ flex: 1 }} />
-                  <button type="submit">추가</button>
+                  <div className="add-wrap">
+                    <input name="draftText" type="text" placeholder="일정 내용 입력" />
+                    <button className="addBtn" type="submit">추가</button>
+                  </div>
                 </form>
               </div>
             )}

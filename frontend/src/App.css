@@ -6,7 +6,6 @@
     align-items: center;
 }
 
-/* 헤더 박스 */
 .Header {
     margin-top: 50px;
     width: 520px;
@@ -16,7 +15,6 @@
     box-shadow: 0 0 70px 10px #b2fdff66, 0 4px 32px #c5e6ff70;
 }
 
-/* 여행명 입력 박스 */
 .travel-title,
 .travel-input-wrap {
     width: 520px;
@@ -25,7 +23,6 @@
     gap: 20px;
 }
 
-/* 입력창, 버튼 크기 크게 */
 .travel-title-input,
 .travel-input {
     height: 48px;
@@ -57,7 +54,6 @@
     cursor: not-allowed;
 }
 
-/* Day 리스트 */
 .day-list,
 .DayListWrap,
 .trip-list {
@@ -89,7 +85,6 @@
     transform: translateY(-2px) scale(1.06);
 }
 
-/* 상단 bar, 버튼 등 개선 */
 .top-bar {
     font-size: 2.0rem;
 }

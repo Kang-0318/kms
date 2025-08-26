@@ -21,7 +21,7 @@ const TripEditor = ({ onCreate, selectedDate }) => {
       <input
         ref={inputRef}
         type="text"
-        placeholder={isValidDate ? "여행명 입력..." : "먼저 유효한 날짜를 선택하세요 (YYYY-MM-DD)"}
+        placeholder={isValidDate ? "여행명 입력" : "먼저 유효한 날짜를 선택하세요 (YYYY-MM-DD)"}
         value={text}
         onChange={(e) => setText(e.target.value)}
         style={{ flex: 1 }}

@@ -133,5 +133,3 @@ export default function TripItem({ trip, onDelete, onEdit, onUpdateChecked }) {
     </div>
   );
 }
-
-export default TripItem
