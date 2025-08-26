@@ -1,3 +1,139 @@
-header h1 {
-    color: rgb(37, 147, 255)
+/* 헤더 전체 */
+.Header {
+    background: linear-gradient(115deg, #fff1e3 0%, #e0ffff 100%);
+    border-radius: 20px;
+    box-shadow: 0 0 60px 10px #b2fdff88, 0 2px 16px rgba(255, 209, 102, 0.24);
+    padding: 28px 32px 30px 32px;
+    margin: 8px 0 16px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* top-bar */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 여행(홈) 버튼 */
+.home-btn {
+    background: linear-gradient(90deg, #ffe082 0%, #00e2ff 100%);
+    color: #2e2e2e;
+    font-weight: bold;
+    border: none;
+    padding: 12px 28px;
+    font-size: 1.24rem;
+    border-radius: 32px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 16px 4px #fff59d99, 0 0 12px 2px #26ffe988;
+    transition: 0.3s;
+}
+
+.home-btn:hover {
+    background: linear-gradient(90deg, #fffde7 0%, #80deea 100%);
+    transform: scale(1.06);
+    box-shadow: 0 0 32px 8px #fffde7dd, 0 0 20px 8px #ffeb3bee;
+}
+
+/* D-Day 표시 */
+.dday {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #22577a;
+    background: linear-gradient(90deg, #FFDEAD 60%, #B2DFDB 100%);
+    padding: 13px 32px;
+    border-radius: 20px;
+    box-shadow: 0 0 30px #3ddad6bb, 0 0 12px #ffe082aa;
+    filter: drop-shadow(0 0 8px #ffe08288);
+    margin-left: 14px;
+    letter-spacing: 2px;
+}
+
+/* 날짜 선택 */
+.date-range {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    margin-bottom: 14px;
+}
+
+.date-range input[type="date"] {
+    padding: 9px 16px;
+    border: 1.5px solid #b6faff;
+    border-radius: 12px;
+    font-size: 1rem;
+    background: #ffffffbb;
+    box-shadow: 0 0 15px #e0ffff64, 0 2px 12px #ffe08244;
+    outline: none;
+    transition: 0.2s;
+}
+
+.date-range input[type="date"]:focus {
+    border-color: #00bcd4;
+    box-shadow: 0 0 22px #26c6da99;
+}
+
+/* Day 미리보기 리스트 */
+.day-list {
+    display: flex;
+    gap: 14px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.day-item {
+    background: linear-gradient(90deg, #fffbe7 80%, #e0ffff 100%);
+    color: #3d5a80;
+    border: none;
+    padding: 13px 28px 13px 20px;
+    border-radius: 18px;
+    font-size: 1.07rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 24px #00e2ffbb, 0 0 6px #ffeb3b55;
+    transition: 0.23s;
+    letter-spacing: 1.2px;
+}
+
+.day-item:hover {
+    background: linear-gradient(90deg, #fff 60%, #b3ffff 100%);
+    box-shadow: 0 0 40px #00e2ffbb, 0 0 14px #ffeb3b66;
+    transform: translateY(-2px) scale(1.08);
+}
+
+/* 비행기 애니메이션 */
+.airplane {
+    position: absolute;
+    top: 20px;
+    left: -70px;
+    font-size: 2.4rem;
+    filter: drop-shadow(0 0 16px #00e2ffb3);
+    animation: fly 6s linear infinite;
+}
+
+@keyframes fly {
+    0% {
+        left: -70px;
+        top: 22px;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    50% {
+        left: 45%;
+        top: -20px;
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        left: 110%;
+        top: 22px;
+        opacity: 0;
+    }
 }

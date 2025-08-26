@@ -2,16 +2,28 @@ import React from "react";
 import TripItem from "./TripItem";
 import "./TripList.css";
 
-const TripList = ({ trips, onDelete }) => {
+const TripList = ({ trips, onDelete, onEdit, onToggle }) => {
   return (
     <div className="TripList">
-      <h4>여행 목록 🌍</h4>
-      <input type="text" placeholder="검색어를 입력하세요" />
-      <div className="trips-wrapper">
-        {trips.map((trip, i) => (
-          <TripItem key={trip._id ?? i} trip={trip} onDelete={onDelete} />
-        ))}
-      </div>
+      <h4>검색 결과</h4>
+
+      {(!trips || trips.length === 0) ? (
+        <p style={{ marginTop: 12, color: "#777" }}>
+          검색 결과가 없습니다.
+        </p>
+      ) : (
+        <div className="trips-wrapper">
+          {trips.map((trip) => (
+            <TripItem
+              key={trip._id ?? trip.id}
+              trip={trip}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onToggle={onToggle}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

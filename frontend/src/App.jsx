@@ -4,24 +4,24 @@ import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import Header from "./components/Header";
-import TripEditor from "./components/TripEditor";
-import TripList from "./components/TripList";
+import TripCategories from "./components/TripCategories";
+import TripPlanner from "./components/TripPlanner";
 
 // 환경변수 끝 슬래시 방지
 function normalizeBase(url) {
   return url?.replace(/\/+$/, "") ?? "";
 }
 
-// "YYYY-MM-DD" + dayjs 시간 → JS Date
-function combineDateAndTime(dateStr, timeDayjs) {
-  const base = dateStr ? dayjs(dateStr) : dayjs(); // 날짜(없으면 오늘)
-  const t = timeDayjs ?? dayjs(); // 시각
-  return base
-    .hour(t.hour())
-    .minute(t.minute())
-    .second(0)
-    .millisecond(0)
-    .toDate();
+// 시작~종료 사이 날짜 배열
+function buildDateStrings(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const s = dayjs(startDate, "YYYY-MM-DD", true);
+  const e = dayjs(endDate, "YYYY-MM-DD", true);
+  if (!s.isValid() || !e.isValid() || e.isBefore(s)) return [];
+  const diff = e.diff(s, "day");
+  return Array.from({ length: diff + 1 }, (_, i) =>
+    s.add(i, "day").format("YYYY-MM-DD")
+  );
 }
 
 export default function App() {
@@ -29,125 +29,106 @@ export default function App() {
   const API = `${baseURL}/api/trips`;
 
   const [trips, setTrips] = useState([]);
+  const [startDate, setStartDate] = useState(""); // YYYY-MM-DD
+  const [endDate, setEndDate] = useState("");     // YYYY-MM-DD
+  const [showCategories, setShowCategories] = useState(true); // 리스트 표시 여부
 
-  // 여행 기간 & 선택된 Day 상태
-  const [startDate, setStartDate] = useState(""); // yyyy-mm-dd
-  const [endDate, setEndDate] = useState(""); // yyyy-mm-dd
-  const [selectedDay, setSelectedDay] = useState(null); // 숫자 (1부터)
-  const [selectedDate, setSelectedDate] = useState(null); // yyyy-mm-dd
+  const rangeDates = useMemo(
+    () => buildDateStrings(startDate, endDate),
+    [startDate, endDate]
+  );
+  const rangeReady = rangeDates.length > 0;
 
-  // 목록 불러오기
   useEffect(() => {
-    const fetchTrips = async () => {
+    if (!rangeReady) setShowCategories(true);
+  }, [rangeReady]);
+
+  // 초기 목록 불러오기
+  useEffect(() => {
+    (async () => {
       try {
         const res = await axios.get(API);
         const data = Array.isArray(res.data) ? res.data : res.data?.trips ?? [];
         setTrips(data);
-      } catch (error) {
-        console.error("가져오기 실패", error);
+      } catch (e) {
+        console.error("가져오기 실패", e);
       }
-    };
-    fetchTrips();
+    })();
   }, [API]);
 
-  // Day 클릭 시 선택 상태 반영
-  const handleSelectDay = (dayNo, dateStr) => {
-    setSelectedDay(dayNo);
-    setSelectedDate(dateStr);
-  };
-
-  // 기간 변경
+  // 날짜 변경: 계획 모드 진입 → 리스트 숨김
   const handleRangeChange = (start, end) => {
     setStartDate(start);
     setEndDate(end);
-    setSelectedDay(null);
-    setSelectedDate(null);
+    setShowCategories(false);
   };
 
-  // 선택된 날짜/Day의 여행 항목만 필터링
-  const filteredTrips = useMemo(() => {
-    if (!selectedDate && !selectedDay) return trips;
+  // 홈 버튼: 날짜 초기화 + 리스트 표시
+  const handleHome = () => {
+    setStartDate("");
+    setEndDate("");
+    setShowCategories(true);
+  };
 
-    return trips.filter((t) => {
-      const tDate =
-        t.date || t.targetDate || t.when || t.tripDate || t.createdDate;
-      const tDayNo = t.dayNo || t.day || t.dayIndex;
+  // (선택) 상단 Day 클릭을 쓰고 싶다면 사용
+  const handleSelectDay = (dayNo, dateStr) => {
+    console.log("select day", dayNo, dateStr);
+  };
 
-      if (selectedDate && tDate)
-        return String(tDate).slice(0, 10) === selectedDate;
-      if (selectedDay && tDayNo)
-        return Number(tDayNo) === Number(selectedDay);
-      return false;
-    });
-  }, [trips, selectedDate, selectedDay]);
+  // TripPlanner → 여행명 확정 시 Day별 일정 생성 후 리스트 다시 표시 + 날짜 초기화
+  const handleCommit = async (name, draftByDate) => {
+    const entries = Object.entries(draftByDate);
+    if (entries.length === 0) return;
 
-  // 추가: 선택한 날짜 + 입력한 시간으로 저장 (여행명 name 필드 사용)
-  const onCreate = async (tripName, timeDayjs) => {
-    const name = tripName?.trim();
-    if (!name) return;
     try {
-      const payload = {
-        name, // ✅ 여행명
-        text: name, // (서버가 text만 읽는 구버전 호환)
-        date: combineDateAndTime(selectedDate, timeDayjs),
-      };
-      if (selectedDay) payload.dayNo = selectedDay;
-
-      const res = await axios.post(API, payload);
-      const created = res.data?.trip ?? res.data;
-
-      if (Array.isArray(res.data?.trips)) {
-        setTrips(res.data.trips);
-      } else {
-        setTrips((prev) => [created, ...prev]);
+      const created = [];
+      for (const [date, items] of entries) {
+        for (const it of items) {
+          const payload = {
+            name,               // 여행명(그룹)
+            text: it.text,      // ✅ 일정명
+            date: new Date(`${date}T00:00:00.000Z`),
+          };
+          const r = await axios.post(API, payload);
+          created.push(r.data?.trip ?? r.data);
+        }
       }
-    } catch (error) {
-      console.error("추가 실패", error);
+      setTrips((prev) => [...created, ...prev]);
+
+      // ✅ 계획 확정 이후: 날짜 초기화 → TripPlanner 사라지고 리스트만 보이게
+      setStartDate("");
+      setEndDate("");
+      setShowCategories(true);
+    } catch (e) {
+      console.error("여행 생성 실패", e);
     }
   };
 
+  // =========================
+  // TripItem 에서 쓸 콜백들
+  // =========================
 
-  // 수정: 여행명(name) + 시간 동시 수정
-  const onEdit = async (id, newName, newTimeDayjs, baseDateISO) => {
-    const name = newName?.trim();
-    if (!name) return;
+  // 체크 토글 (간단히 PUT으로 isCompleted만 갱신)
+  const onUpdateChecked = async (id, nextChecked) => {
     try {
-      // 기존 날짜 부분 유지하면서 시간 교체 (baseDateISO 없으면 선택된 날짜)
-      const baseDateStr = baseDateISO
-        ? String(baseDateISO).slice(0, 10)
-        : selectedDate;
-
-      const update = {
-        name,
-        text: name, // (구버전 호환)
-        date: combineDateAndTime(baseDateStr, newTimeDayjs),
-      };
-      const { data } = await axios.put(`${API}/${id}`, update);
-
-      const updated = data?.trip ?? data?.updated ?? data;
-
-      setTrips((prev) =>
-
-        prev.map((t) => (String(t._id) === String(updated._id) ? updated : t))
-      );
-    } catch (error) {
-      console.error("수정 실패", error);
+      const { data } = await axios.put(`${API}/${id}`, { isCompleted: nextChecked });
+      setTrips((prev) => prev.map((t) => (String(t._id) === String(data._id) ? data : t)));
+    } catch (e) {
+      console.error("체크 토글 실패", e);
     }
   };
 
-  // 완료 체크 토글 (필요 시 유지)
-  const onToggle = async (id, nextChecked) => {
+  // 일정 수정(텍스트 + 날짜)
+  const onEdit = async (id, update) => {
+    // update: { text?: string, dateStr?: 'YYYY-MM-DD' }
     try {
-      const { data } = await axios.patch(`${API}/${id}/check`, {
-        isCompleted: nextChecked,
-      });
-      const updated = data?.trip ?? data;
-
-      setTrips((prev) =>
-        prev.map((t) => (String(t._id) === String(updated._id) ? updated : t))
-      );
-    } catch (error) {
-      console.error("체크 토글 실패", error);
+      const body = {};
+      if (typeof update.text === "string") body.text = update.text.trim();
+      if (update.dateStr) body.date = new Date(`${update.dateStr}T00:00:00.000Z`);
+      const { data } = await axios.put(`${API}/${id}`, body);
+      setTrips((prev) => prev.map((t) => (String(t._id) === String(data._id) ? data : t)));
+    } catch (e) {
+      console.error("수정 실패", e);
     }
   };
 
@@ -155,17 +136,10 @@ export default function App() {
   const onDelete = async (id) => {
     try {
       if (!confirm("정말 삭제할까요?")) return;
-
-      const { data } = await axios.delete(`${API}/${id}`);
-
-      if (Array.isArray(data?.trips)) {
-        setTrips(data.trips);
-        return;
-      }
-      const deletedId = data?.deletedId ?? data?.trip?._id ?? data?._id ?? id;
-      setTrips((prev) => prev.filter((t) => t._id !== deletedId));
-    } catch (error) {
-      console.error("삭제 실패", error);
+      await axios.delete(`${API}/${id}`);
+      setTrips((prev) => prev.filter((t) => String(t._id) !== String(id)));
+    } catch (e) {
+      console.error("삭제 실패", e);
     }
   };
 
@@ -176,23 +150,31 @@ export default function App() {
         endDate={endDate}
         onRangeChange={handleRangeChange}
         onSelectDay={handleSelectDay}
+        hideDayPreview      // 상단 Day 미리보기는 숨김 (계획 모드는 TripPlanner에서)
+        onHome={handleHome} // 홈 버튼 동작
       />
 
-      {selectedDay && selectedDate && (
-        <p style={{ margin: "8px 0 12px" }}>
-          선택한 일정: <b>Day {selectedDay}</b> ({selectedDate})
-        </p>
+      {/* 날짜가 유효할 때만 계획 모드(여행명 + Day별 일정 임시 입력) */}
+      {rangeReady && (
+        <TripPlanner
+          startDate={startDate}
+          endDate={endDate}
+          rangeReady={rangeReady}
+          onCommit={handleCommit}
+        />
       )}
 
-      {/* TripEditor는 onCreate(name, timeDayjs) 형태로 콜백 호출 */}
-      <TripEditor onCreate={onCreate} />
-
-      <TripList
-        trips={filteredTrips}
-        onDelete={onDelete}
-        onEdit={onEdit}
-        onToggle={onToggle}
-      />
+      {/* 여행명 카테고리: 날짜를 고르는 동안은 숨김, 추가 후엔 표시 */}
+      {showCategories && (
+        <div style={{ marginTop: 16 }}>
+          <TripCategories
+            trips={trips}
+            onDelete={onDelete}
+            onEdit={onEdit}
+            onUpdateChecked={onUpdateChecked}
+          />
+        </div>
+      )}
     </div>
   );
 }

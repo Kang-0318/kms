@@ -1,118 +1,83 @@
-import { useMemo } from "react";
+import dayjs from "dayjs";
+import React, { useMemo } from "react";
+import "./header.css"; // 👈 CSS 불러오기
 
-function toNoon(d) {
-  const x = new Date(d);
-  x.setHours(12, 0, 0, 0);
-  return x;
+function buildDates(startDate, endDate) {
+  if (!startDate || !endDate) return [];
+  const s = dayjs(startDate);
+  const e = dayjs(endDate);
+  const diff = e.diff(s, "day");
+  return Array.from({ length: diff + 1 }, (_, i) =>
+    s.add(i, "day").format("YYYY-MM-DD")
+  );
 }
 
-function daysBetweenInclusive(startStr, endStr) {
-  if (!startStr || !endStr) return 0;
-  const s = toNoon(startStr);
-  const e = toNoon(endStr);
-  const diff = e - s;
-  if (diff < 0) return 0;
-  return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-}
-
-function addDays(dateStr, n) {
-  const d = toNoon(dateStr);
-  d.setDate(d.getDate() + n);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+// D-? 계산: startDate 기준
+function getDDayText(startDate) {
+  if (!startDate) return "";
+  const today = dayjs().startOf("day");
+  const s = dayjs(startDate, "YYYY-MM-DD", true).startOf("day");
+  if (!s.isValid()) return "";
+  const diff = s.diff(today, "day");
+  if (diff === 0) return "D-day";
+  if (diff > 0) return `D-${diff}`;
+  return `D+${Math.abs(diff)}`;
 }
 
 export default function Header({
   startDate,
   endDate,
-  onRangeChange, // (start, end) => void
-  onSelectDay,   // (dayNo, dateStr) => void
+  onRangeChange,
+  onSelectDay,
+  hideDayPreview = false, // 상단 Day 미리보기 숨길지
+  onHome,                 // ← 홈 버튼 콜백
 }) {
-  const ddayText = useMemo(() => {
-    if (!startDate) return "날짜를 선택하세요 ✈️";
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const target = new Date(startDate);
-    target.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-    if (diffDays > 0) return `D-${diffDays}`;
-    if (diffDays === 0) return "D-Day 🎉";
-    return `D+${Math.abs(diffDays)}`;
-  }, [startDate]);
-
-  const dayCount = useMemo(
-    () => daysBetweenInclusive(startDate, endDate),
-    [startDate, endDate]
-  );
-
-  const dayList = useMemo(() => {
-    if (dayCount <= 0) return [];
-    return Array.from({ length: dayCount }, (_, i) => ({
-      label: `Day ${i + 1}`,
-      date: addDays(startDate, i),
-    }));
-  }, [dayCount, startDate]);
+  const dates = useMemo(() => buildDates(startDate, endDate), [startDate, endDate]);
+  const dday = getDDayText(startDate);
 
   return (
-    <header className="header">
-      <h3>
-        <a href="index.html">여행 🗓️</a>
-        </h3>
-      <h1>{ddayText}</h1>
-
-      <div className="date-range" style={{ marginTop: 8 }}>
-        <label>
-          시작일&nbsp;
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => onRangeChange?.(e.target.value, endDate)}
-            max={endDate || undefined}
-          />
-        </label>
-        <span style={{ margin: "0 8px" }}>~</span>
-        <label>
-          종료일&nbsp;
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => onRangeChange?.(startDate, e.target.value)}
-            min={startDate || undefined}
-          />
-        </label>
+    <div className="Header">
+      {/* Top bar */}
+      <div className="top-bar">
+        <button type="button" onClick={onHome} className="home-btn">
+          여행 <span role="img" aria-label="emoji">🧳</span>
+        </button>
+        {!!dday && <div className="dday">{dday}</div>}
       </div>
 
-      <div className="day-list">
-        {dayList.length === 0 ? (
-          <p style={{ color: "#888", marginTop: 12 }}>
-            기간을 선택하면 Day 1, Day 2…가 생성됩니다.
-          </p>
-        ) : (
-          <ul style={{ listStyle: "none", paddingLeft: 0, marginTop: 12 }}>
-            {dayList.map((d, idx) => (
-              <li
-                key={d.date}
-                className="day-item"
-                onClick={() => onSelectDay?.(idx + 1, d.date)}
-                style={{
-                  cursor: "pointer",
-                  padding: "8px 10px",
-                  border: "1px solid #eee",
-                  borderRadius: 8,
-                  marginBottom: 6,
-                }}
-              >
-                <strong>{d.label}</strong>
-                <span style={{ marginLeft: 8 }}>{d.date}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* 날짜 선택 */}
+      <div className="date-range">
+        <input
+          type="date"
+          value={startDate || ""}
+          onChange={(e) => onRangeChange(e.target.value, endDate)}
+        />
+        <span>~</span>
+        <input
+          type="date"
+          value={endDate || ""}
+          onChange={(e) => onRangeChange(startDate, e.target.value)}
+        />
       </div>
-    </header>
-  /* header edit test2 */
+
+      {/* 비행기 애니메이션 추가 */}
+      <div className="airplane" aria-label="airplane" role="img">✈️</div>
+
+      {/* Day 미리보기 */}
+      {!hideDayPreview && dates.length > 0 && (
+        <div className="day-list">
+          {dates.map((d, i) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => onSelectDay?.(i + 1, d)}
+              className="day-item"
+            >
+              <b>Day {i + 1}</b> <span style={{ color: "#777" }}>{d}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
-

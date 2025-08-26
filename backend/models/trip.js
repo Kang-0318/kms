@@ -2,27 +2,17 @@ const mongoose = require("mongoose");
 
 const tripSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,       // 여행명
-    },
-    date: {
-      type: Date,
-      required: true,   // 여행 날짜(시작일 또는 특정 일정)
-      default: Date.now,
-    },
-    dayNo: {
-      type: Number,     // 몇 번째 Day인지 (선택)
-    },
-    isCompleted: {
-      type: Boolean,
-      default: false,   // 필요 없다면 제거 가능
-    },
+    // 여행명 (그룹핑용)
+    name: { type: String, required: true, trim: true },
+
+    // 일정명 (리스트에 보일 제목)
+    text: { type: String, required: true, trim: true },
+
+    isCompleted: { type: Boolean, default: false },
+
+    date: { type: Date, required: true }, // 각 Day의 날짜/시간
   },
   { timestamps: true }
 );
 
-const Trip = mongoose.model("Trip", tripSchema);
-
-module.exports = Trip;
+module.exports = mongoose.model("Trip", tripSchema);
