@@ -70,4 +70,26 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+
+// DELETE
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!ensureObjectId(id, res)) return;
+
+    const deleted = await Trip.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ message: "해당 Id의 trip가 없습니다." });
+    }
+
+    // 프론트는 res 바디를 안 써도 되지만, 편의를 위해 id 반환
+    return res.status(200).json({ deletedId: id });
+  } catch (e) {
+    return res.status(400).json({ error: "삭제 실패" });
+  }
+});
+
+module.exports = router;
+
+
 module.exports = router;
