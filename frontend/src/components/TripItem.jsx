@@ -1,3 +1,4 @@
+
 // src/components/TripItem.jsx
 import React, { useMemo, useState } from "react";
 import "./TripItem.css";
@@ -62,6 +63,7 @@ export default function TripItem({ trip, onDelete, onEdit, onUpdateChecked }) {
     if (e.key === "Escape") cancelEdit();
   };
 
+
   const displayDate = useMemo(() => {
     try {
       if (!trip?.date) return "";
@@ -72,6 +74,7 @@ export default function TripItem({ trip, onDelete, onEdit, onUpdateChecked }) {
       return "";
     }
   }, [trip?.date]);
+
 
   // ✅ 화면 표시용: text 우선, 없으면 name 보조
   const displayText = (trip?.text ?? "").trim() || (trip?.name ?? "").trim();
@@ -130,3 +133,5 @@ export default function TripItem({ trip, onDelete, onEdit, onUpdateChecked }) {
     </div>
   );
 }
+
+export default TripItem
