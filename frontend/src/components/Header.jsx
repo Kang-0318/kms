@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import React, { useMemo } from "react";
-import "./header.css"; // 👈 CSS 불러오기
+import "./Header.css"; // 👈 CSS 불러오기
 
 function buildDates(startDate, endDate) {
   if (!startDate || !endDate) return [];
